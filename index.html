@@ -83,10 +83,32 @@ body:before{
 
 .intro-logo-wrap{
   position:relative;
-  width:min(330px,62vw);
+  width:min(250px,55vw);
   aspect-ratio:1;
   perspective:900px;
-  animation:introIn 1.4s cubic-bezier(.18,.8,.2,1) both;
+  animation:introIn 1.2s cubic-bezier(.18,.8,.2,1) both;
+}
+
+.discord-3d{
+  width:100%;
+  height:100%;
+  display:grid;
+  place-items:center;
+  transform-style:preserve-3d;
+  animation:discordSpin 5.5s ease-in-out infinite;
+  filter:drop-shadow(0 0 10px #39ff14) drop-shadow(0 0 32px #39ff1466) drop-shadow(0 22px 28px #000);
+}
+
+.discord-3d svg{
+  width:88%;
+  height:88%;
+  overflow:visible;
+  transform-style:preserve-3d;
+}
+
+@keyframes discordSpin{
+  0%,100%{transform:rotateY(-18deg) rotateX(4deg) translateY(0) scale(1)}
+  50%{transform:rotateY(198deg) rotateX(-4deg) translateY(-8px) scale(1.035)}
 }
 @keyframes introIn{
   from{opacity:0;transform:scale(.45) rotateX(35deg) rotateY(-35deg)}
@@ -115,7 +137,7 @@ body:before{
 }
 @keyframes shine{to{transform:rotate(360deg)}}
 .intro-title{
-  position:absolute;top:calc(50% + min(190px,30vw));left:50%;
+  position:absolute;top:calc(50% + min(150px,24vw));left:50%;
   transform:translateX(-50%);
   font-weight:900;letter-spacing:4px;font-size:clamp(18px,3vw,28px);
   text-shadow:0 0 18px #39ff14;
@@ -124,7 +146,7 @@ body:before{
 }
 @keyframes titleIn{from{opacity:0;transform:translate(-50%,20px)}to{opacity:1;transform:translate(-50%,0)}}
 .intro-loading{
-  position:absolute;top:calc(50% + min(225px,36vw));left:50%;
+  position:absolute;top:calc(50% + min(188px,30vw));left:50%;
   transform:translateX(-50%);width:130px;height:3px;border-radius:10px;
   background:#183018;overflow:hidden;
 }
@@ -273,9 +295,20 @@ footer{text-align:center;color:#657065;padding:25px 0 35px;font-size:13px}
   <div class="energy"></div>
   <div class="energy"></div>
   <div class="energy"></div>
-  <div class="intro-logo-wrap">
+  <div class="intro-logo-wrap discord-intro-logo">
     <div class="intro-shine"></div>
-    <img class="intro-logo" src="rokori-r-3d.gif" alt="Rokori BR" onerror="this.src='rokori-logo.png'">
+    <div class="discord-3d">
+      <svg viewBox="0 0 256 256" aria-label="Discord" role="img">
+        <defs>
+          <linearGradient id="discordGreen" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#8cff66"/>
+            <stop offset="45%" stop-color="#39ff14"/>
+            <stop offset="100%" stop-color="#12a800"/>
+          </linearGradient>
+        </defs>
+        <path fill="url(#discordGreen)" d="M216.7 67.7A201.5 201.5 0 0 0 167 52.1l-6.1 12.4a185 185 0 0 0-65.8 0L89 52.1a201.5 201.5 0 0 0-49.7 15.6C8 114.2 0 158.8 4.5 202.8a199.8 199.8 0 0 0 61.1 31.1l14.8-20.1a129.3 129.3 0 0 1-22.9-10.9l5.6-4.3c44.2 20.6 92.1 20.6 135.8 0l5.6 4.3a129.3 129.3 0 0 1-22.9 10.9l14.8 20.1a199.8 199.8 0 0 0 61.1-31.1c5.3-51.1-8.9-95.3-40.8-135.1ZM85.3 178.4c-13.1 0-23.8-12-23.8-26.7s10.5-26.7 23.8-26.7 24 12 23.8 26.7c0 14.7-10.6 26.7-23.8 26.7Zm85.4 0c-13.1 0-23.8-12-23.8-26.7s10.5-26.7 23.8-26.7 24 12 23.8 26.7c0 14.7-10.6 26.7-23.8 26.7Z"/>
+      </svg>
+    </div>
   </div>
   <div class="intro-title">ROKORI BR</div>
   <div class="intro-loading"></div>
@@ -288,7 +321,7 @@ footer{text-align:center;color:#657065;padding:25px 0 35px;font-size:13px}
 
 <main class="container">
   <div class="banner">
-    <img src="rokori-brasil.png" alt="Rokori BR">
+    <img src="rokori-r-banner.png" alt="Rokori BR">
   </div>
 
   <div class="steps">
