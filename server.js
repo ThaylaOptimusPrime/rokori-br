@@ -16,22 +16,66 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 
 function readApplications() {
-  try { return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); }
-  catch { return []; }
+  try {
+    return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+  } catch {
+    return [];
+  }
 }
+
 function saveApplications(applications) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(applications, null, 2));
 }
+
 function auth(req, res, next) {
   const password = req.headers['x-admin-password'];
-  if (!password || password !== ADMIN_PASSWORD) return res.status(401).json({ error: 'Não autorizado.' });
+  if (!password || password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ error: 'Não autorizado.' });
+  }
   next();
 }
 
+async function giveDiscordRole(discordId) {
+  const token = process.env.DISCORD_BOT_TOKEN;
+  const guildId = process.env.DISCORD_GUILD_ID;
+  const roleId = process.env.DISCORD_ADMIN_ROLE_ID;
+
+  if (!token || !guildId || !roleId) {
+    throw new Error('Configuração do bot incompleta no Render.');
+  }
+
+  const response = await fetch(
+    `https://discord.com/api/v10/guilds/${guildId}/members/${discordId}/roles/${roleId}`,
+    {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bot ${token}`,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Discord recusou a entrega do cargo (HTTP ${response.status}). ${details.slice(0, 300)}`);
+  }
+}
+
 app.post('/api/applications', (req, res) => {
-  const required = ['nick','discord','age','time','experience','why','conflict','friend','choose','availability','rules'];
+  const required = [
+    'nick', 'discord', 'discordId', 'age', 'time', 'experience',
+    'why', 'conflict', 'friend', 'choose', 'availability', 'rules'
+  ];
+
   const missing = required.filter(k => !String(req.body[k] ?? '').trim());
-  if (missing.length) return res.status(400).json({ error: 'Preencha todos os campos.', missing });
+  if (missing.length) {
+    return res.status(400).json({ error: 'Preencha todos os campos.', missing });
+  }
+
+  const discordId = String(req.body.discordId).trim();
+  if (!/^[0-9]{17,20}$/.test(discordId)) {
+    return res.status(400).json({ error: 'O ID do Discord precisa ter de 17 a 20 números.' });
+  }
 
   const application = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
@@ -50,24 +94,52 @@ app.get('/api/applications', auth, (req, res) => {
   res.json(readApplications());
 });
 
-app.patch('/api/applications/:id', auth, (req, res) => {
+app.patch('/api/applications/:id', auth, async (req, res) => {
   const allowed = ['Pendente', 'Aprovada', 'Recusada'];
-  if (!allowed.includes(req.body.status)) return res.status(400).json({ error: 'Status inválido.' });
+  if (!allowed.includes(req.body.status)) {
+    return res.status(400).json({ error: 'Status inválido.' });
+  }
+
   const applications = readApplications();
   const item = applications.find(a => a.id === req.params.id);
-  if (!item) return res.status(404).json({ error: 'Candidatura não encontrada.' });
+  if (!item) {
+    return res.status(404).json({ error: 'Candidatura não encontrada.' });
+  }
+
+  if (req.body.status === 'Aprovada') {
+    if (!item.discordId || !/^[0-9]{17,20}$/.test(String(item.discordId))) {
+      return res.status(400).json({
+        error: 'Esta candidatura não tem um ID numérico válido do Discord. A pessoa precisa enviar uma nova candidatura com o ID.'
+      });
+    }
+
+    try {
+      await giveDiscordRole(String(item.discordId));
+    } catch (error) {
+      console.error('Erro ao entregar cargo do Discord:', error.message);
+      return res.status(502).json({ error: error.message || 'Não foi possível entregar o cargo no Discord.' });
+    }
+  }
+
   item.status = req.body.status;
   saveApplications(applications);
-  res.json({ ok: true, application: item });
+  return res.json({ ok: true, application: item });
 });
 
 app.delete('/api/applications/:id', auth, (req, res) => {
   const applications = readApplications();
   const filtered = applications.filter(a => a.id !== req.params.id);
-  if (filtered.length === applications.length) return res.status(404).json({ error: 'Candidatura não encontrada.' });
+
+  if (filtered.length === applications.length) {
+    return res.status(404).json({ error: 'Candidatura não encontrada.' });
+  }
+
   saveApplications(filtered);
   res.json({ ok: true });
 });
 
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
-app.listen(PORT, '0.0.0.0', () => console.log(`Rokori BR rodando na porta ${PORT}`));
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Rokori BR rodando na porta ${PORT}`);
+});
