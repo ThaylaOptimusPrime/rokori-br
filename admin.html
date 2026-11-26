@@ -1,150 +1,69 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Rokori BR — Painel Admin</title>
 <style>
-:root{--green:#39ff14;--bg:#030603;--card:#091009;--line:#1d3b1d;--muted:#93a193;--yellow:#ffd84d;--red:#ff6262}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -15%,#174517 0,#050905 45%,#020302 100%);color:#fff;font-family:Arial,sans-serif;min-height:100vh}.wrap{width:min(1150px,94%);margin:28px auto 50px}.card{background:rgba(9,16,9,.94);border:1px solid var(--line);border-radius:20px;padding:22px;margin-bottom:18px;box-shadow:0 10px 35px #0008}.login{max-width:440px;margin:12vh auto;text-align:center}.logo{font-size:30px;font-weight:900;letter-spacing:1px}.logo span{color:var(--green)}.input{width:100%;padding:14px;border-radius:12px;border:1px solid #315331;background:#030603;color:#fff;margin:12px 0;font-size:16px;outline:none}.input:focus{border-color:var(--green);box-shadow:0 0 0 3px #39ff1422}button{border:0;border-radius:11px;padding:11px 15px;font-weight:900;cursor:pointer;background:var(--green);color:#031003;transition:.15s}button:hover{transform:translateY(-1px);filter:brightness(1.08)}button.secondary{background:#172217;color:#fff;border:1px solid #315331}.danger{background:#c93636;color:#fff}.hidden{display:none}.muted{color:var(--muted)}.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}.head h1{margin:0;margin-right:auto}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}.stat{background:#050905;border:1px solid var(--line);border-radius:14px;padding:15px}.stat b{display:block;font-size:25px;margin-bottom:4px}.stat span{color:var(--muted);font-size:13px}.app{border:1px solid #203d20;border-radius:18px;padding:20px;margin:15px 0;background:linear-gradient(145deg,#091109,#050905)}.app h2{margin:0 0 5px;font-size:22px}.status{font-weight:900;padding:5px 9px;border-radius:999px;font-size:12px}.pending{color:var(--yellow);background:#ffd84d14}.approved{color:var(--green);background:#39ff1414}.rejected{color:var(--red);background:#ff626214}.meta{color:#7f8c7f;font-size:12px}.question{margin:14px 0;padding:12px;border-radius:12px;background:#040804;border:1px solid #162816}.question b{display:block;margin-bottom:6px;color:#cceacc}.answers{white-space:pre-wrap;line-height:1.5;color:#e8eee8}.toolbar{margin-top:15px}.empty{text-align:center;padding:30px}.error{color:#ff8080;min-height:20px}@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}.wrap{width:94%;margin-top:15px}.card,.app{padding:16px}.head h1{width:100%;margin-bottom:4px}.toolbar button{flex:1}.app .row button{flex:1;min-width:105px}}
-</style>
-</head>
-<body>
-<main class="wrap">
-<section id="login" class="card login">
-  <div class="logo">ROKORI <span>BR</span></div>
-  <h2>🛡️ Painel Administrativo</h2>
-  <p class="muted">Acesso restrito à administração.</p>
-  <input id="password" class="input" type="password" placeholder="Digite a senha do painel" autocomplete="current-password">
-  <button onclick="login()" style="width:100%">Entrar no painel</button>
-  <p id="loginError" class="error"></p>
-</section>
+:root{--g:#39ff14;--bg:#050805;--card:#0b110b;--muted:#9aa49a}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -10%,#153915,#020302 60%);color:#fff;font-family:Arial,sans-serif}.wrap{width:min(1100px,94%);margin:30px auto}.card{background:#0b110b;border:1px solid #1c351c;border-radius:18px;padding:22px;margin-bottom:18px}h1{margin-top:0}.login{max-width:430px;margin:12vh auto}.input{width:100%;padding:13px;border-radius:10px;border:1px solid #294329;background:#050805;color:#fff;margin:8px 0 12px}button{border:0;border-radius:10px;padding:11px 14px;font-weight:800;cursor:pointer;background:var(--g);color:#031003}.danger{background:#d33;color:#fff}.muted{color:var(--muted)}.hidden{display:none}.app{border:1px solid #223922;border-radius:14px;padding:18px;margin:14px 0;background:#080d08}.answers{white-space:pre-wrap;line-height:1.45}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.status{font-weight:800}.pending{color:#ffd84d}.approved{color:#39ff14}.rejected{color:#ff6b6b}small{color:#7f887f}
 
-<section id="panel" class="hidden">
-  <div class="card head">
-    <div class="row">
-      <h1>🛡️ Candidaturas</h1>
-      <button class="secondary" onclick="loadApps()">↻ Atualizar</button>
-      <button class="danger" onclick="logout()">Sair</button>
-    </div>
-    <div class="stats">
-      <div class="stat"><b id="total">0</b><span>Total</span></div>
-      <div class="stat"><b id="pending">0</b><span>Pendentes</span></div>
-      <div class="stat"><b id="approved">0</b><span>Aprovadas</span></div>
-      <div class="stat"><b id="rejected">0</b><span>Recusadas</span></div>
+body{min-height:100vh}
+.gate,.b-reaction{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.18)}
+.gate-card{width:min(560px,94vw);padding:28px;text-align:center;background:rgba(5,8,5,.9);border:1px solid rgba(57,255,20,.55);border-radius:22px;box-shadow:0 0 35px rgba(57,255,20,.16),0 18px 60px rgba(0,0,0,.55)}
+.reaction{display:block;width:min(260px,70vw);margin:0 auto 18px;border-radius:14px}
+.gate-badge{color:#39ff14;font-weight:900;letter-spacing:1px;margin-bottom:12px}
+.gate-card h1{font-size:clamp(22px,5vw,34px);margin:0 0 10px}
+.gate-sub{color:#c3cbc3;margin:0 0 24px}
+.gate-buttons{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.gate-buttons button{min-width:220px;padding:14px 18px;font-size:15px;border-radius:12px}
+.gate-buttons .no{background:#d33;color:#fff}
+.b-reaction{background:#000}
+#bVideo{width:min(700px,96vw);max-height:90vh;object-fit:contain;border-radius:16px;cursor:pointer}
+.hidden{display:none !important}
+</style></head><body><main class="wrap">
+<div id="gate" class="gate">
+  <div class="gate-card">
+    <img class="reaction" src="ayla-gato.jpg" alt="Gato">
+    <div class="gate-badge">🔐 ROKORI BR</div>
+    <h1>VC ACHA A CO-OWNER AYLA LEGAL?</h1>
+    <p class="gate-sub">Responda para continuar para o painel.</p>
+    <div class="gate-buttons">
+      <button class="yes" onclick="answerYes()">A) Sim, óbvio</button>
+      <button class="no" onclick="answerNo()">B) Nunca KKKKKKKK</button>
     </div>
   </div>
-  <div id="apps"></div>
-</section>
-</main>
+</div>
 
-<script>
+<div id="bReaction" class="b-reaction hidden">
+  <video id="bVideo" src="gato-b.mp4" autoplay loop playsinline></video>
+</div>
+
+<div id="login" class="card login hidden"><h1>🛡️ Rokori BR</h1><p class="muted">Painel de candidaturas administrativas.</p><input id="password" class="input" type="password" placeholder="Senha do painel"><button onclick="login()">Entrar</button><p id="loginError" class="muted"></p></div>
+<div id="panel" class="hidden"><div class="card"><div class="row"><h1 style="margin-right:auto">Candidaturas</h1><button onclick="loadApps()">Atualizar</button><button class="danger" onclick="logout()">Sair</button></div><p id="count" class="muted"></p></div><div id="apps"></div></div>
+</main><script>
 let password='';
+function login(){password=document.getElementById('password').value;if(!password)return;loadApps().then(ok=>{if(ok){document.getElementById('login').classList.add('hidden');document.getElementById('panel').classList.remove('hidden')}})}
+async function loadApps(){try{const r=await fetch('/api/applications',{headers:{'x-admin-password':password}});if(r.status===401){document.getElementById('loginError').textContent='Senha incorreta.';return false}const apps=await r.json();render(apps);return true}catch(e){document.getElementById('loginError').textContent='Erro ao conectar ao servidor.';return false}}
+function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function render(apps){document.getElementById('count').textContent=`${apps.length} candidatura(s) recebida(s)`;document.getElementById('apps').innerHTML=apps.length?apps.map(a=>`<article class="app"><div class="row"><h2>${esc(a.nick)}</h2><span class="status ${a.status==='Aprovada'?'approved':a.status==='Recusada'?'rejected':'pending'}">${esc(a.status)}</span><small>${new Date(a.submittedAt).toLocaleString('pt-BR')}</small></div><p><b>Discord:</b> ${esc(a.discord)} &nbsp; <b>Idade:</b> ${esc(a.age)} &nbsp; <b>Tempo:</b> ${esc(a.time)}</p><p><b>Experiência:</b> ${esc(a.experience)}<br><b>Disponibilidade:</b> ${esc(a.availability)}<br><b>Segue regras:</b> ${esc(a.rules)}</p><p><b>Por que quer ser Admin?</b><br><span class="answers">${esc(a.why)}</span></p><p><b>Discussão entre membros:</b><br><span class="answers">${esc(a.conflict)}</span></p><p><b>Amigo quebrando regra:</b><br><span class="answers">${esc(a.friend)}</span></p><p><b>Por que escolher você?</b><br><span class="answers">${esc(a.choose)}</span></p><div class="row"><button onclick="setStatus('${a.id}','Aprovada')">Aprovar</button><button onclick="setStatus('${a.id}','Recusada')">Recusar</button><button onclick="setStatus('${a.id}','Pendente')">Pendente</button><button class="danger" onclick="removeApp('${a.id}')">Excluir</button></div></article>`).join(''):'<div class="card"><p>Nenhuma candidatura ainda.</p></div>'}
+async function setStatus(id,status){await fetch('/api/applications/'+id,{method:'PATCH',headers:{'Content-Type':'application/json','x-admin-password':password},body:JSON.stringify({status})});loadApps()}
+async function removeApp(id){if(!confirm('Excluir esta candidatura?'))return;await fetch('/api/applications/'+id,{method:'DELETE',headers:{'x-admin-password':password}});loadApps()}
+function logout(){password='';document.getElementById('panel').classList.add('hidden');document.getElementById('login').classList.remove('hidden')}
 
-document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
-
-async function login(){
-  password=document.getElementById('password').value.trim();
-  if(!password){document.getElementById('loginError').textContent='Digite a senha.';return}
-  const ok=await loadApps();
-  if(ok){
-    document.getElementById('login').classList.add('hidden');
-    document.getElementById('panel').classList.remove('hidden');
-  }
-}
-
-async function loadApps(){
-  try{
-    const r=await fetch('/api/applications',{headers:{'x-admin-password':password}});
-    if(r.status===401){
-      document.getElementById('loginError').textContent='Senha incorreta.';
-      return false;
-    }
-    if(!r.ok)throw new Error();
-    const apps=await r.json();
-    render(apps);
-    return true;
-  }catch(e){
-    document.getElementById('loginError').textContent='Erro ao conectar ao servidor.';
-    return false;
-  }
-}
-
-function esc(v){
-  return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-}
-function statusClass(s){return s==='Aprovada'?'approved':s==='Recusada'?'rejected':'pending'}
-
-function render(apps){
-  const p=apps.filter(a=>a.status==='Pendente').length;
-  const ap=apps.filter(a=>a.status==='Aprovada').length;
-  const r=apps.filter(a=>a.status==='Recusada').length;
-  document.getElementById('total').textContent=apps.length;
-  document.getElementById('pending').textContent=p;
-  document.getElementById('approved').textContent=ap;
-  document.getElementById('rejected').textContent=r;
-
-  document.getElementById('apps').innerHTML=apps.length?apps.map(a=>`
-  <article class="app">
-    <div class="row">
-      <h2>${esc(a.nick)}</h2>
-      <span class="status ${statusClass(a.status)}">${esc(a.status)}</span>
-      <span class="meta">${new Date(a.submittedAt).toLocaleString('pt-BR')}</span>
-    </div>
-
-    <div class="question"><b>👤 Dados</b>
-      Discord: ${esc(a.discord)}<br>
-      ID do Discord: ${esc(a.discordId||'não informado')}<br>
-      Idade: ${esc(a.age)}<br>
-      Tempo disponível: ${esc(a.time)}
-    </div>
-
-    <div class="question"><b>🎮 Experiência</b><div class="answers">${esc(a.experience)}</div></div>
-    <div class="question"><b>🛡️ Por que quer ser Admin?</b><div class="answers">${esc(a.why)}</div></div>
-    <div class="question"><b>⚔️ Como lidaria com uma discussão?</b><div class="answers">${esc(a.conflict)}</div></div>
-    <div class="question"><b>👥 E se um amigo quebrasse uma regra?</b><div class="answers">${esc(a.friend)}</div></div>
-    <div class="question"><b>⭐ Por que devemos escolher você?</b><div class="answers">${esc(a.choose)}</div></div>
-    <div class="question"><b>🕒 Disponibilidade</b><div class="answers">${esc(a.availability)}</div></div>
-    <div class="question"><b>📜 Segue as regras?</b><div class="answers">${esc(a.rules)}</div></div>
-
-    <div class="row toolbar">
-      <button onclick="setStatus('${esc(a.id)}','Aprovada')">✅ Aprovar</button>
-      <button onclick="setStatus('${esc(a.id)}','Recusada')">❌ Recusar</button>
-      <button class="secondary" onclick="setStatus('${esc(a.id)}','Pendente')">⏳ Pendente</button>
-      <button class="danger" onclick="removeApp('${esc(a.id)}')">🗑️ Excluir</button>
-    </div>
-  </article>`).join(''):'<div class="card empty"><h2>Nenhuma candidatura ainda.</h2><p class="muted">Quando alguém enviar uma candidatura, ela aparecerá aqui.</p></div>';
-}
-
-async function setStatus(id,status){
-  if(status==='Aprovada'&&!confirm('Aprovar esta candidatura? O servidor também tentará entregar o cargo configurado no Discord.'))return;
-  if(status==='Recusada'&&!confirm('Recusar esta candidatura?'))return;
-  try{
-    const r=await fetch('/api/applications/'+encodeURIComponent(id),{
-      method:'PATCH',
-      headers:{'Content-Type':'application/json','x-admin-password':password},
-      body:JSON.stringify({status})
-    });
-    const result=await r.json().catch(()=>({}));
-    if(!r.ok){alert(result.error||'Não foi possível alterar o status.');return}
-    await loadApps();
-  }catch(e){alert('Erro de conexão com o servidor.')}
-}
-
-async function removeApp(id){
-  if(!confirm('Excluir esta candidatura permanentemente?'))return;
-  const r=await fetch('/api/applications/'+encodeURIComponent(id),{method:'DELETE',headers:{'x-admin-password':password}});
-  if(!r.ok){alert('Não foi possível excluir.');return}
-  loadApps();
-}
-
-function logout(){
-  password='';
-  document.getElementById('password').value='';
-  document.getElementById('loginError').textContent='';
-  document.getElementById('panel').classList.add('hidden');
+function answerYes(){
+  document.getElementById('gate').classList.add('hidden');
   document.getElementById('login').classList.remove('hidden');
+  document.getElementById('password').focus();
 }
-</script>
-</body>
-</html>
+function answerNo(){
+  document.getElementById('gate').classList.add('hidden');
+  const box=document.getElementById('bReaction');
+  box.classList.remove('hidden');
+  document.getElementById('bVideo').currentTime=0;
+  document.getElementById('bVideo').play().catch(()=>{});
+}
+document.getElementById('bVideo').addEventListener('click',function(){
+  this.pause();
+  document.getElementById('bReaction').classList.add('hidden');
+  document.getElementById('gate').classList.remove('hidden');
+});
+</script></body></html>
