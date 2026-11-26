@@ -13,6 +13,13 @@ if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, '[]');
 
 app.use(express.json({ limit: '100kb' }));
 app.use(express.urlencoded({ extended: true }));
+app.use((req, res, next) => {
+  if (req.path === '/admin.html') {
+    return res.status(404).send('Página não encontrada.');
+  }
+  next();
+});
+
 app.use(express.static(__dirname));
 
 function readApplications() {
@@ -35,19 +42,6 @@ function auth(req, res, next) {
   next();
 }
 
-function wait(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-// Impede duas aprovações de cargo de acontecerem ao mesmo tempo.
-let discordRoleQueue = Promise.resolve();
-
-function queueDiscordRole(task) {
-  const run = discordRoleQueue.then(task, task);
-  discordRoleQueue = run.catch(() => {});
-  return run;
-}
-
 async function giveDiscordRole(discordId) {
   const token = process.env.DISCORD_BOT_TOKEN;
   const guildId = process.env.DISCORD_GUILD_ID;
@@ -57,55 +51,20 @@ async function giveDiscordRole(discordId) {
     throw new Error('Configuração do bot incompleta no Render.');
   }
 
-  const url =
-    `https://discord.com/api/v10/guilds/${guildId}/members/${discordId}/roles/${roleId}`;
-
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    const response = await fetch(url, {
+  const response = await fetch(
+    `https://discord.com/api/v10/guilds/${guildId}/members/${discordId}/roles/${roleId}`,
+    {
       method: 'PUT',
       headers: {
         Authorization: `Bot ${token}`,
         'Content-Type': 'application/json'
       }
-    });
-
-    if (response.ok) {
-      return;
     }
+  );
 
+  if (!response.ok) {
     const details = await response.text();
-
-    if (response.status === 429 && attempt < 3) {
-      let retryMs = 5000;
-
-      try {
-        const data = JSON.parse(details);
-        if (typeof data.retry_after === 'number') {
-          retryMs = Math.ceil(data.retry_after * 1000);
-        }
-      } catch {}
-
-      const retryHeader = response.headers.get('retry-after');
-      if (retryHeader) {
-        const headerMs = Math.ceil(Number(retryHeader) * 1000);
-        if (Number.isFinite(headerMs)) {
-          retryMs = headerMs;
-        }
-      }
-
-      retryMs = Math.min(Math.max(retryMs, 1000), 60000);
-
-      console.log(
-        `Discord respondeu 429. Tentativa ${attempt}/3. Aguardando ${retryMs}ms...`
-      );
-
-      await wait(retryMs);
-      continue;
-    }
-
-    throw new Error(
-      `Discord recusou a entrega do cargo (HTTP ${response.status}). ${details.slice(0, 300)}`
-    );
+    throw new Error(`Discord recusou a entrega do cargo (HTTP ${response.status}). ${details.slice(0, 300)}`);
   }
 }
 
@@ -162,7 +121,7 @@ app.patch('/api/applications/:id', auth, async (req, res) => {
     }
 
     try {
-      await queueDiscordRole(() => giveDiscordRole(String(item.discordId)));
+      await giveDiscordRole(String(item.discordId));
     } catch (error) {
       console.error('Erro ao entregar cargo do Discord:', error.message);
       return res.status(502).json({ error: error.message || 'Não foi possível entregar o cargo no Discord.' });
@@ -186,7 +145,7 @@ app.delete('/api/applications/:id', auth, (req, res) => {
   res.json({ ok: true });
 });
 
-app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
+app.get('/painel', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Rokori BR rodando na porta ${PORT}`);
