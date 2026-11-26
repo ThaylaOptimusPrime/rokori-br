@@ -39,6 +39,15 @@ function wait(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// Impede duas aprovações de cargo de acontecerem ao mesmo tempo.
+let discordRoleQueue = Promise.resolve();
+
+function queueDiscordRole(task) {
+  const run = discordRoleQueue.then(task, task);
+  discordRoleQueue = run.catch(() => {});
+  return run;
+}
+
 async function giveDiscordRole(discordId) {
   const token = process.env.DISCORD_BOT_TOKEN;
   const guildId = process.env.DISCORD_GUILD_ID;
@@ -153,7 +162,7 @@ app.patch('/api/applications/:id', auth, async (req, res) => {
     }
 
     try {
-      await giveDiscordRole(String(item.discordId));
+      await queueDiscordRole(() => giveDiscordRole(String(item.discordId)));
     } catch (error) {
       console.error('Erro ao entregar cargo do Discord:', error.message);
       return res.status(502).json({ error: error.message || 'Não foi possível entregar o cargo no Discord.' });
