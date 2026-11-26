@@ -35,6 +35,10 @@ function auth(req, res, next) {
   next();
 }
 
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function giveDiscordRole(discordId) {
   const token = process.env.DISCORD_BOT_TOKEN;
   const guildId = process.env.DISCORD_GUILD_ID;
@@ -44,20 +48,55 @@ async function giveDiscordRole(discordId) {
     throw new Error('Configuração do bot incompleta no Render.');
   }
 
-  const response = await fetch(
-    `https://discord.com/api/v10/guilds/${guildId}/members/${discordId}/roles/${roleId}`,
-    {
+  const url =
+    `https://discord.com/api/v10/guilds/${guildId}/members/${discordId}/roles/${roleId}`;
+
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const response = await fetch(url, {
       method: 'PUT',
       headers: {
         Authorization: `Bot ${token}`,
         'Content-Type': 'application/json'
       }
-    }
-  );
+    });
 
-  if (!response.ok) {
+    if (response.ok) {
+      return;
+    }
+
     const details = await response.text();
-    throw new Error(`Discord recusou a entrega do cargo (HTTP ${response.status}). ${details.slice(0, 300)}`);
+
+    if (response.status === 429 && attempt < 3) {
+      let retryMs = 5000;
+
+      try {
+        const data = JSON.parse(details);
+        if (typeof data.retry_after === 'number') {
+          retryMs = Math.ceil(data.retry_after * 1000);
+        }
+      } catch {}
+
+      const retryHeader = response.headers.get('retry-after');
+      if (retryHeader) {
+        const headerMs = Math.ceil(Number(retryHeader) * 1000);
+        if (Number.isFinite(headerMs)) {
+          retryMs = headerMs;
+        }
+      }
+
+      retryMs = Math.min(Math.max(retryMs, 1000), 60000);
+
+      console.log(
+        `Discord respondeu 429. Tentativa ${attempt}/3. Aguardando ${retryMs}ms...`
+      );
+
+      await wait(retryMs);
+      continue;
+    }
+
+    throw new Error(
+      `Discord recusou a entrega do cargo (HTTP ${response.status}). ${details.slice(0, 300)}`
+    );
   }
 }
 
