@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rokori BR — Recrutamento de Admin</title>
+<style>
+:root{--green:#39ff14;--green2:#19c900;--bg:#050805;--card:#0b110b;--text:#f5f5f5;--muted:#a7afa7}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 50% -10%,#153915 0,#050805 42%,#020302 100%);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+.container{width:min(900px,92%);margin:auto}
+header{padding:34px 0 22px;text-align:center}
+.logo{font-size:46px;font-weight:900;letter-spacing:-3px;font-style:italic}
+.logo span{color:var(--green)}
+.sub{color:var(--muted);margin-top:8px}
+.banner{margin:18px auto 28px;border:1px solid #214421;border-radius:20px;overflow:hidden;box-shadow:0 0 35px #16ff1822;background:#071007}
+.banner img{display:block;width:100%;max-height:330px;object-fit:cover}
+.card{background:linear-gradient(180deg,#0c130c,#080c08);border:1px solid #1c351c;border-radius:22px;padding:28px;box-shadow:0 18px 50px #0008}
+h1{font-size:26px;margin:0 0 8px}
+.desc{color:var(--muted);line-height:1.5;margin-bottom:25px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.field{margin-bottom:18px}
+.full{grid-column:1/-1}
+label{display:block;font-weight:700;margin-bottom:8px}
+input,select,textarea{width:100%;background:#050805;border:1px solid #294329;border-radius:12px;padding:13px 14px;color:#fff;outline:none;font-size:15px}
+input:focus,select:focus,textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px #39ff1418}
+textarea{min-height:115px;resize:vertical}
+button{width:100%;border:0;border-radius:14px;padding:15px;font-size:17px;font-weight:900;cursor:pointer;color:#031003;background:var(--green);box-shadow:0 0 22px #39ff1438;transition:.15s}
+button:hover{transform:translateY(-1px);filter:brightness(1.05)}
+.note{font-size:12px;color:#7f887f;text-align:center;margin-top:14px}
+.success{display:none;text-align:center;padding:28px 10px}
+.success .check{font-size:50px}
+.success h2{margin:8px 0;color:var(--green)}
+footer{text-align:center;color:#657065;padding:25px 0 35px;font-size:13px}
+@media(max-width:650px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.logo{font-size:38px}.card{padding:20px}}
+</style>
+</head>
+<body>
+<header class="container">
+  <div class="logo">Rokori <span>BR</span> 🇧🇷</div>
+  <div class="sub">Recrutamento oficial • Equipe Administrativa</div>
+</header>
+
+<main class="container">
+  <div class="banner">
+    <img src="rokori-banner.gif" alt="Rokori BR">
+  </div>
+
+  <section class="card">
+    <div id="formArea">
+      <h1>🛡️ Candidatura para Admin</h1>
+      <p class="desc">Quer fazer parte da equipe da Rokori BR? Preencha tudo com sinceridade. As candidaturas serão analisadas pela administração.</p>
+
+      <form id="adminForm">
+        <div class="grid">
+          <div class="field">
+            <label>Nome / Nick</label>
+            <input required name="nick" placeholder="Ex.: RokoriPlayer">
+          </div>
+          <div class="field">
+            <label>Discord</label>
+            <input required name="discord" placeholder="Ex.: @usuario">
+          </div>
+
+          <div class="field">
+            <label>Idade</label>
+            <input required type="number" min="1" max="99" name="age" placeholder="Sua idade">
+          </div>
+          <div class="field">
+            <label>Tempo na Rokori BR</label>
+            <input required name="time" placeholder="Ex.: 3 meses">
+          </div>
+
+          <div class="field full">
+            <label>Já foi Staff/Admin em outro servidor?</label>
+            <select required name="experience">
+              <option value="">Selecione...</option>
+              <option>Sim, tenho experiência</option>
+              <option>Não, seria minha primeira vez</option>
+            </select>
+          </div>
+
+          <div class="field full">
+            <label>Por que você quer ser Admin da Rokori BR?</label>
+            <textarea required name="why" placeholder="Explique sua motivação..."></textarea>
+          </div>
+
+          <div class="field full">
+            <label>Como você resolveria uma discussão entre dois membros?</label>
+            <textarea required name="conflict" placeholder="Explique como agiria..."></textarea>
+          </div>
+
+          <div class="field full">
+            <label>E se um amigo seu quebrasse uma regra?</label>
+            <textarea required name="friend" placeholder="O que você faria?"></textarea>
+          </div>
+
+          <div class="field full">
+            <label>Por que deveríamos escolher você?</label>
+            <textarea required name="choose" placeholder="Fale sobre seus pontos fortes..."></textarea>
+          </div>
+
+          <div class="field full">
+            <label>Disponibilidade</label>
+            <select required name="availability">
+              <option value="">Selecione...</option>
+              <option>Menos de 1 hora por dia</option>
+              <option>1–3 horas por dia</option>
+              <option>3–5 horas por dia</option>
+              <option>5+ horas por dia</option>
+            </select>
+          </div>
+
+          <div class="field full">
+            <label>Você concorda em seguir as regras e decisões da administração?</label>
+            <select required name="rules">
+              <option value="">Selecione...</option>
+              <option>Sim</option>
+              <option>Não</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit">🚀 Enviar candidatura</button>
+        <div class="note">Rokori BR • Comunidade brasileira de Roblox</div>
+      </form>
+    </div>
+
+    <div class="success" id="success">
+      <div class="check">✅</div>
+      <h2>Candidatura enviada!</h2>
+      <p>Obrigado por se candidatar à equipe da Rokori BR. A administração vai analisar suas respostas.</p>
+      <button onclick="location.reload()">Enviar outra candidatura</button>
+    </div>
+  </section>
+</main>
+
+<footer>© Rokori BR — Recrutamento Administrativo</footer>
+
+<script>
+document.getElementById("adminForm").addEventListener("submit", async function(e){
+  e.preventDefault();
+  const button = this.querySelector('button[type="submit"]');
+  button.disabled = true;
+  button.textContent = "Enviando...";
+  const data = Object.fromEntries(new FormData(this).entries());
+  try {
+    const response = await fetch("/api/applications", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Não foi possível enviar.");
+    document.getElementById("formArea").style.display="none";
+    document.getElementById("success").style.display="block";
+  } catch (error) {
+    alert(error.message || "Erro ao enviar candidatura.");
+    button.disabled = false;
+    button.textContent = "🚀 Enviar candidatura";
+  }
+});
+</script>
+</body>
+</html>
