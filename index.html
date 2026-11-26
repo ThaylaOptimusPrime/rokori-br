@@ -22,6 +22,23 @@ body{
   background:
     radial-gradient(circle at 50% 0%,#123d15 0,#061006 32%,#020302 72%);
 }
+
+/* Mantém o site escondido enquanto a abertura 3D está rodando.
+   Assim a bandeira não aparece por baixo/na transição da abertura. */
+body.intro-active > header,
+body.intro-active > main,
+body.intro-active > footer{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity .7s ease, visibility .7s ease;
+}
+
+body > header,
+body > main,
+body > footer{
+  transition:opacity .7s ease, visibility .7s ease;
+}
 body:before{
   content:"";
   position:fixed;inset:-30%;
@@ -194,7 +211,7 @@ footer{text-align:center;color:#657065;padding:25px 0 35px;font-size:13px}
 }
 </style>
 </head>
-<body>
+<body class="intro-active">
 
 <!-- ABERTURA -->
 <div id="intro">
@@ -204,20 +221,20 @@ footer{text-align:center;color:#657065;padding:25px 0 35px;font-size:13px}
   <div class="energy"></div>
   <div class="intro-logo-wrap">
     <div class="intro-shine"></div>
-    <img class="intro-logo" src="rokori-r-3d.gif" alt="Rokori BR">
+    <img class="intro-logo" src="rokori-r-3d.gif" alt="Rokori BR" onerror="this.src='rokori-logo.png'">
   </div>
   <div class="intro-title">ROKORI BR</div>
   <div class="intro-loading"></div>
 </div>
 
 <header class="container">
-  <div class="logo">Rokori <span>BR</span> 🇧🇷</div>
+  <div class="logo">Rokori <span>BR</span></div>
   <div class="sub">Recrutamento oficial • Equipe Administrativa</div>
 </header>
 
 <main class="container">
   <div class="banner">
-    <img src="rokori-r-3d.gif" alt="Rokori BR">
+    <img src="brasil-banner.png" alt="Bandeira do Brasil">
   </div>
 
   <div class="steps">
@@ -372,7 +389,13 @@ function showPage(page){
 
 window.addEventListener("load",()=>{
   setTimeout(()=>{
-    document.getElementById("intro").classList.add("hide");
+    const intro = document.getElementById("intro");
+    intro.classList.add("hide");
+
+    // Espera a abertura terminar de sumir antes de mostrar o site.
+    setTimeout(()=>{
+      document.body.classList.remove("intro-active");
+    },900);
   },3200);
 });
 
