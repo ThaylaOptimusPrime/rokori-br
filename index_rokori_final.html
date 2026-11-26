@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rokori BR — Recrutamento</title>
+<style>
+:root{
+  --green:#39ff14;
+  --green2:#19c900;
+  --yellow:#ffd400;
+  --blue:#1357d8;
+  --bg:#020502;
+  --card:#091009;
+  --text:#f5fff5;
+  --muted:#9aa79a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+body{
+  overflow-x:hidden;
+  background:
+    radial-gradient(circle at 50% 0%,#123d15 0,#061006 32%,#020302 72%);
+}
+
+/* Mantém o site escondido enquanto a abertura 3D está rodando.
+   Assim a bandeira não aparece por baixo/na transição da abertura. */
+body.intro-active > header,
+body.intro-active > main,
+body.intro-active > footer{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity .7s ease, visibility .7s ease;
+}
+
+body > header,
+body > main,
+body > footer{
+  transition:opacity .7s ease, visibility .7s ease;
+}
+body:before{
+  content:"";
+  position:fixed;inset:-30%;
+  pointer-events:none;
+  background:
+    radial-gradient(circle,#39ff1414 0,transparent 35%),
+    radial-gradient(circle at 70% 60%,#ffd4000d 0,transparent 30%);
+  animation:ambient 8s ease-in-out infinite alternate;
+}
+@keyframes ambient{to{transform:scale(1.12) rotate(3deg);opacity:.8}}
+
+.container{width:min(920px,92%);margin:auto}
+
+/* ===== ABERTURA ===== */
+#intro{
+  position:fixed;z-index:9999;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+  background:#010201;
+  transition:opacity .9s ease,visibility .9s ease;
+}
+#intro.hide{opacity:0;visibility:hidden;pointer-events:none}
+.intro-bg{
+  position:absolute;inset:-20%;
+  background:
+    radial-gradient(circle at 50% 50%,#0d4d16 0,transparent 25%),
+    radial-gradient(circle at 25% 70%,#164b1a 0,transparent 18%),
+    radial-gradient(circle at 75% 30%,#0b3212 0,transparent 20%);
+  filter:blur(20px);
+  animation:bgMove 7s ease-in-out infinite alternate;
+}
+@keyframes bgMove{to{transform:scale(1.1) rotate(-2deg)}}
+.energy{
+  position:absolute;width:55vw;height:55vw;max-width:650px;max-height:650px;
+  border:2px solid #39ff1455;border-radius:50%;
+  box-shadow:0 0 50px #39ff1430, inset 0 0 50px #39ff1418;
+  animation:orbit 5s linear infinite;
+}
+.energy:nth-child(2){transform:rotate(60deg) scale(.82);border-color:#ffd40055;animation-duration:6s}
+.energy:nth-child(3){transform:rotate(120deg) scale(.68);border-color:#1765ff55;animation-duration:7s}
+@keyframes orbit{to{transform:rotate(360deg)}}
+
+.intro-logo-wrap{
+  position:relative;
+  width:min(330px,62vw);
+  aspect-ratio:1;
+  perspective:900px;
+  animation:introIn 1.4s cubic-bezier(.18,.8,.2,1) both;
+}
+@keyframes introIn{
+  from{opacity:0;transform:scale(.45) rotateX(35deg) rotateY(-35deg)}
+  to{opacity:1;transform:scale(1) rotateX(0) rotateY(0)}
+}
+.intro-logo{
+  width:100%;height:100%;object-fit:contain;
+  filter:
+    drop-shadow(0 0 10px #39ff14)
+    drop-shadow(0 0 28px #39ff1477)
+    drop-shadow(0 22px 35px #000);
+  animation:logoFloat 3.5s ease-in-out infinite;
+  transform-style:preserve-3d;
+}
+@keyframes logoFloat{
+  0%,100%{transform:translateY(0) rotateY(-3deg) rotateX(2deg) scale(1)}
+  50%{transform:translateY(-13px) rotateY(8deg) rotateX(-2deg) scale(1.025)}
+}
+.intro-shine{
+  position:absolute;inset:-8%;
+  border-radius:50%;
+  background:conic-gradient(from 0deg,transparent 0 25%,#39ff1400 30%,#39ff14aa 38%,transparent 46% 65%,#ffd40088 73%,transparent 80%);
+  filter:blur(7px);
+  animation:shine 2.7s linear infinite;
+  pointer-events:none;
+}
+@keyframes shine{to{transform:rotate(360deg)}}
+.intro-title{
+  position:absolute;top:calc(50% + min(190px,30vw));left:50%;
+  transform:translateX(-50%);
+  font-weight:900;letter-spacing:4px;font-size:clamp(18px,3vw,28px);
+  text-shadow:0 0 18px #39ff14;
+  white-space:nowrap;
+  animation:titleIn 1.2s .5s both;
+}
+@keyframes titleIn{from{opacity:0;transform:translate(-50%,20px)}to{opacity:1;transform:translate(-50%,0)}}
+.intro-loading{
+  position:absolute;top:calc(50% + min(225px,36vw));left:50%;
+  transform:translateX(-50%);width:130px;height:3px;border-radius:10px;
+  background:#183018;overflow:hidden;
+}
+.intro-loading:after{
+  content:"";display:block;width:45%;height:100%;background:var(--green);
+  box-shadow:0 0 12px var(--green);animation:load 1.7s ease-in-out infinite;
+}
+@keyframes load{0%{transform:translateX(-120%)}100%{transform:translateX(300%)}}
+
+/* ===== SITE ===== */
+header{padding:30px 0 18px;text-align:center}
+.logo{font-size:42px;font-weight:900;letter-spacing:-2px;font-style:italic}
+.logo span{color:var(--green)}
+.sub{color:var(--muted);margin-top:7px}
+
+.banner{
+  position:relative;
+  margin:12px auto 24px;
+  height:320px;
+  border:1px solid #214421;
+  border-radius:24px;
+  overflow:hidden;
+  isolation:isolate;
+  background:#020502;
+  box-shadow:0 0 35px #16ff1822;
+  perspective:900px;
+}
+
+/* Fundo da arte girando suavemente */
+.banner::before{
+  content:"";
+  position:absolute;
+  inset:-28%;
+  z-index:-2;
+  background:url("rokori-brasil.png") center/cover no-repeat;
+  filter:blur(14px) brightness(.65);
+  opacity:.75;
+  animation:bannerBgRotate 18s linear infinite;
+}
+
+.banner::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  background:radial-gradient(circle at center,#39ff1418,transparent 62%);
+  pointer-events:none;
+}
+
+.banner img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  padding:18px;
+  filter:drop-shadow(0 14px 24px #000b);
+  transform:translateZ(0) rotateX(1deg) rotateY(-1.5deg) scale(.96);
+  animation:bannerFloat 5s ease-in-out infinite;
+}
+
+@keyframes bannerBgRotate{
+  from{transform:rotate(0deg) scale(1.15)}
+  to{transform:rotate(360deg) scale(1.15)}
+}
+
+@keyframes bannerFloat{
+  0%,100%{transform:translateZ(0) rotateX(1deg) rotateY(-1.5deg) scale(.96)}
+  50%{transform:translateY(-5px) rotateX(-1deg) rotateY(1.5deg) scale(.975)}
+}
+
+@media(max-width:650px){
+  .banner{height:260px}
+  .banner img{padding:12px}
+}
+
+.steps{display:flex;gap:10px;margin:0 0 18px}
+.step{
+  flex:1;padding:11px 10px;border:1px solid #1d351d;border-radius:13px;
+  background:#071007;color:#6f7b6f;text-align:center;font-weight:800;font-size:13px;
+}
+.step.active{color:#fff;border-color:#39ff14;background:#0c190c;box-shadow:0 0 18px #39ff1420}
+.step b{display:block;color:var(--green);font-size:11px;margin-bottom:3px}
+
+.card{
+  background:linear-gradient(180deg,#0c130c,#080c08);
+  border:1px solid #1c351c;border-radius:22px;padding:28px;
+  box-shadow:0 18px 50px #0008
+}
+.page{display:none}
+.page.active{display:block;animation:pageIn .45s ease}
+@keyframes pageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+h1{font-size:27px;margin:0 0 9px}
+.desc{color:var(--muted);line-height:1.55;margin-bottom:24px}
+
+.instructions{display:grid;gap:12px;margin:20px 0 25px}
+.instruction{
+  display:flex;gap:13px;align-items:flex-start;padding:15px;
+  border:1px solid #1d351d;border-radius:15px;background:#050905
+}
+.instruction .icon{font-size:22px}
+.instruction strong{display:block;margin-bottom:4px}
+.instruction span{color:var(--muted);font-size:14px;line-height:1.4}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.field{margin-bottom:18px}
+.full{grid-column:1/-1}
+label{display:block;font-weight:700;margin-bottom:8px}
+input,select,textarea{
+  width:100%;background:#050805;border:1px solid #294329;border-radius:12px;
+  padding:13px 14px;color:#fff;outline:none;font-size:15px
+}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--green);box-shadow:0 0 0 3px #39ff1418
+}
+textarea{min-height:115px;resize:vertical}
+
+button{
+  width:100%;border:0;border-radius:14px;padding:15px;font-size:17px;
+  font-weight:900;cursor:pointer;color:#031003;background:var(--green);
+  box-shadow:0 0 22px #39ff1438;transition:.15s
+}
+button:hover{transform:translateY(-1px);filter:brightness(1.05)}
+.secondary{
+  background:#0b120b;color:#fff;border:1px solid #294329;
+  box-shadow:none;margin-top:10px
+}
+.note{font-size:12px;color:#7f887f;text-align:center;margin-top:14px}
+.success{display:none;text-align:center;padding:28px 10px}
+.success .check{font-size:50px}.success h2{margin:8px 0;color:var(--green)}
+footer{text-align:center;color:#657065;padding:25px 0 35px;font-size:13px}
+
+@media(max-width:650px){
+  .grid{grid-template-columns:1fr}.full{grid-column:auto}
+  .logo{font-size:36px}.card{padding:20px}
+  .steps{gap:6px}.step{font-size:11px;padding:9px 5px}
+  .intro-logo-wrap{width:72vw}
+}
+</style>
+</head>
+<body class="intro-active">
+
+<!-- ABERTURA -->
+<div id="intro">
+  <div class="intro-bg"></div>
+  <div class="energy"></div>
+  <div class="energy"></div>
+  <div class="energy"></div>
+  <div class="intro-logo-wrap">
+    <div class="intro-shine"></div>
+    <img class="intro-logo" src="rokori-r-3d.gif" alt="Rokori BR" onerror="this.src='rokori-logo.png'">
+  </div>
+  <div class="intro-title">ROKORI BR</div>
+  <div class="intro-loading"></div>
+</div>
+
+<header class="container">
+  <div class="logo">Rokori <span>BR</span></div>
+  <div class="sub">Recrutamento oficial • Equipe Administrativa</div>
+</header>
+
+<main class="container">
+  <div class="banner">
+    <img src="rokori-brasil.png" alt="Rokori BR">
+  </div>
+
+  <div class="steps">
+    <div class="step active" id="step1"><b>01</b>Instruções</div>
+    <div class="step" id="step2"><b>02</b>Candidatura</div>
+  </div>
+
+  <section class="card">
+    <!-- PARTE 1 -->
+    <div class="page active" id="instructionsPage">
+      <h1>📋 Antes de começar</h1>
+      <p class="desc">Leia as instruções abaixo antes de preencher sua candidatura para a equipe da Rokori BR.</p>
+
+      <div class="instructions">
+        <div class="instruction">
+          <div class="icon">✅</div>
+          <div><strong>Preencha tudo corretamente</strong><span>Responda todas as perguntas com atenção e sinceridade.</span></div>
+        </div>
+        <div class="instruction">
+          <div class="icon">🛡️</div>
+          <div><strong>Seja responsável</strong><span>A equipe procura pessoas que saibam respeitar as regras e os membros.</span></div>
+        </div>
+        <div class="instruction">
+          <div class="icon">⏳</div>
+          <div><strong>Aguarde a análise</strong><span>Depois de enviar, a administração irá analisar sua candidatura.</span></div>
+        </div>
+      </div>
+
+      <button type="button" onclick="showPage('form')">Continuar →</button>
+    </div>
+
+    <!-- PARTE 2 -->
+    <div class="page" id="formPage">
+      <div id="formArea">
+        <h1>🛡️ Candidatura para Admin</h1>
+        <p class="desc">Quer fazer parte da equipe da Rokori BR? Preencha tudo com sinceridade.</p>
+
+        <form id="adminForm">
+          <div class="grid">
+            <div class="field">
+              <label>Nome / Nick</label>
+              <input required name="nick" placeholder="Ex.: RokoriPlayer">
+            </div>
+            <div class="field">
+              <label>Discord</label>
+              <input required name="discord" placeholder="Ex.: @usuario">
+            </div>
+
+            <div class="field full">
+              <label>ID do usuário no Discord</label>
+              <input required name="discordId" inputmode="numeric" pattern="[0-9]{17,20}" placeholder="Ex.: 123456789012345678">
+              <small style="display:block;color:#7f887f;margin-top:7px">Ative o Modo Desenvolvedor no Discord → clique no seu perfil → Copiar ID.</small>
+            </div>
+
+            <div class="field">
+              <label>Idade</label>
+              <input required type="number" min="1" max="99" name="age" placeholder="Sua idade">
+            </div>
+            <div class="field">
+              <label>Tempo na Rokori BR</label>
+              <input required name="time" placeholder="Ex.: 3 meses">
+            </div>
+
+            <div class="field full">
+              <label>Já foi Staff/Admin em outro servidor?</label>
+              <select required name="experience">
+                <option value="">Selecione...</option>
+                <option>Sim, tenho experiência</option>
+                <option>Não, seria minha primeira vez</option>
+              </select>
+            </div>
+
+            <div class="field full">
+              <label>Por que você quer ser Admin da Rokori BR?</label>
+              <textarea required name="why" placeholder="Explique sua motivação..."></textarea>
+            </div>
+
+            <div class="field full">
+              <label>Como você resolveria uma discussão entre dois membros?</label>
+              <textarea required name="conflict" placeholder="Explique como agiria..."></textarea>
+            </div>
+
+            <div class="field full">
+              <label>E se um amigo seu quebrasse uma regra?</label>
+              <textarea required name="friend" placeholder="O que você faria?"></textarea>
+            </div>
+
+            <div class="field full">
+              <label>Por que deveríamos escolher você?</label>
+              <textarea required name="choose" placeholder="Fale sobre seus pontos fortes..."></textarea>
+            </div>
+
+            <div class="field full">
+              <label>Disponibilidade</label>
+              <select required name="availability">
+                <option value="">Selecione...</option>
+                <option>Menos de 1 hora por dia</option>
+                <option>1–3 horas por dia</option>
+                <option>3–5 horas por dia</option>
+                <option>5+ horas por dia</option>
+              </select>
+            </div>
+
+            <div class="field full">
+              <label>Você concorda em seguir as regras e decisões da administração?</label>
+              <select required name="rules">
+                <option value="">Selecione...</option>
+                <option>Sim</option>
+                <option>Não</option>
+              </select>
+            </div>
+          </div>
+
+          <button type="submit">🚀 Enviar candidatura</button>
+          <button type="button" class="secondary" onclick="showPage('instructions')">← Voltar para instruções</button>
+          <div class="note">Rokori BR • Comunidade brasileira de Roblox</div>
+        </form>
+      </div>
+
+      <div class="success" id="success">
+        <div class="check">✅</div>
+        <h2>Candidatura enviada!</h2>
+        <p>Obrigado por se candidatar à equipe da Rokori BR. A administração vai analisar suas respostas.</p>
+        <button onclick="location.reload()">Enviar outra candidatura</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>© Rokori BR — Recrutamento Administrativo</footer>
+
+<script>
+function showPage(page){
+  window.scrollTo({top:0,behavior:"smooth"});
+  const instructions = document.getElementById("instructionsPage");
+  const form = document.getElementById("formPage");
+  const step1 = document.getElementById("step1");
+  const step2 = document.getElementById("step2");
+
+  if(page === "form"){
+    instructions.classList.remove("active");
+    form.classList.add("active");
+    step1.classList.remove("active");
+    step2.classList.add("active");
+  }else{
+    form.classList.remove("active");
+    instructions.classList.add("active");
+    step2.classList.remove("active");
+    step1.classList.add("active");
+  }
+}
+
+window.addEventListener("load",()=>{
+  setTimeout(()=>{
+    const intro = document.getElementById("intro");
+    intro.classList.add("hide");
+
+    // Espera a abertura terminar de sumir antes de mostrar o site.
+    setTimeout(()=>{
+      document.body.classList.remove("intro-active");
+    },900);
+  },3200);
+});
+
+document.getElementById("adminForm").addEventListener("submit", async function(e){
+  e.preventDefault();
+  const button = this.querySelector('button[type="submit"]');
+  button.disabled = true;
+  button.textContent = "Enviando...";
+  const data = Object.fromEntries(new FormData(this).entries());
+
+  try {
+    const response = await fetch("/api/applications", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Não foi possível enviar.");
+
+    document.getElementById("formArea").style.display="none";
+    document.getElementById("success").style.display="block";
+  } catch (error) {
+    alert(error.message || "Erro ao enviar candidatura.");
+    button.disabled = false;
+    button.textContent = "🚀 Enviar candidatura";
+  }
+});
+</script>
+</body>
+</html>
