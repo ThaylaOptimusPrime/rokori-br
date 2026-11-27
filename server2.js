@@ -133,32 +133,44 @@ async function sendDiscordApplication(application) {
     { name: '📜 Regras', value: application.rules || '-', inline: false }
   ];
 
-  const response = await fetch(
-    `https://discord.com/api/v10/channels/${channelId}/messages`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bot ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        embeds: [{
-          title: '📩 Nova candidatura — Site',
-          description: `**ID da candidatura:** \`${application.id}\``,
-          color: 0x39ff14,
-          fields,
-          footer: { text: 'Rokori BR • Candidatura pelo site' },
-          timestamp: application.submittedAt
-        }]
-      })
-    }
-  );
+  let response;
 
-  if (!response.ok) {
-    const details = await response.text();
-    throw new Error(
-      `Discord recusou a candidatura (HTTP ${response.status}). ${details.slice(0, 300)}`
+  for (let tentativa = 1; tentativa <= 3; tentativa++) {
+    response = await fetch(
+      `https://discord.com/api/v10/channels/${channelId}/messages`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bot ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          embeds: [{
+            title: '📩 Nova candidatura — Site',
+            description: `**ID da candidatura:** \`${application.id}\``,
+            color: 0x39ff14,
+            fields,
+            footer: { text: 'Rokori BR • Candidatura pelo site' },
+            timestamp: application.submittedAt
+          }]
+        })
+      }
     );
+
+    if (response.ok) break;
+
+    if (response.status !== 429 || tentativa === 3) {
+      const details = await response.text();
+      throw new Error(
+        `Discord recusou a candidatura (HTTP ${response.status}). ${details.slice(0, 300)}`
+      );
+    }
+
+    const data = await response.json();
+    const espera = Math.ceil((data.retry_after || 5) * 1000);
+
+    console.log(`Discord 429. Tentativa ${tentativa}/3. Aguardando ${espera}ms...`);
+    await wait(espera);
   }
 }
 
