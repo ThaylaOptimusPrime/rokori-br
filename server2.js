@@ -60,25 +60,22 @@ async function giveDiscordRole(discordId) {
   const url =
     `https://discord.com/api/v10/guilds/${guildId}/members/${discordId}/roles/${roleId}`;
 
-  // O Discord pode mandar um retry_after maior que 60s.
-  // Não cortamos mais esse tempo, para evitar repetir a requisição enquanto
-  // o rate limit ainda está ativo.
-  for (let attempt = 1; attempt <= 5; attempt++) {
+  for (let attempt = 1; attempt <= 3; attempt++) {
     const response = await fetch(url, {
       method: 'PUT',
       headers: {
-        Authorization: `Bot ${token}`
+        Authorization: `Bot ${token}`,
+        'Content-Type': 'application/json'
       }
     });
 
-    if (response.ok || response.status === 204) {
-      console.log(`Cargo entregue no Discord para ${discordId}.`);
+    if (response.ok) {
       return;
     }
 
     const details = await response.text();
 
-    if (response.status === 429 && attempt < 5) {
+    if (response.status === 429 && attempt < 3) {
       let retryMs = 5000;
 
       try {
@@ -92,14 +89,14 @@ async function giveDiscordRole(discordId) {
       if (retryHeader) {
         const headerMs = Math.ceil(Number(retryHeader) * 1000);
         if (Number.isFinite(headerMs)) {
-          retryMs = Math.max(retryMs, headerMs);
+          retryMs = headerMs;
         }
       }
 
-      retryMs = Math.max(retryMs, 1000);
+      retryMs = Math.min(Math.max(retryMs, 1000), 60000);
 
       console.log(
-        `Discord respondeu 429. Tentativa ${attempt}/5. Aguardando ${retryMs}ms...`
+        `Discord respondeu 429. Tentativa ${attempt}/3. Aguardando ${retryMs}ms...`
       );
 
       await wait(retryMs);
@@ -257,10 +254,6 @@ app.patch('/api/applications/:id', auth, async (req, res) => {
   }
 
   if (req.body.status === 'Aprovada') {
-    if (item.status === 'Aprovada') {
-      return res.json({ ok: true, application: item });
-    }
-
     if (!item.discordId || !/^[0-9]{17,20}$/.test(String(item.discordId))) {
       return res.status(400).json({
         error: 'Esta candidatura não tem um ID numérico válido do Discord. A pessoa precisa enviar uma nova candidatura com o ID.'
