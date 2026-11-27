@@ -166,8 +166,27 @@ async function sendDiscordApplication(application) {
       );
     }
 
-    const data = await response.json();
-    const espera = Math.ceil((data.retry_after || 5) * 1000);
+    const details = await response.text();
+    let retryAfter = 5;
+
+    try {
+      const data = JSON.parse(details);
+      if (typeof data.retry_after === 'number') {
+        retryAfter = data.retry_after;
+      }
+    } catch (_) {
+      const header = response.headers.get('retry-after');
+      if (header && Number.isFinite(Number(header))) {
+        retryAfter = Number(header);
+      }
+    }
+
+    const header = response.headers.get('retry-after');
+    if (header && Number.isFinite(Number(header))) {
+      retryAfter = Number(header);
+    }
+
+    const espera = Math.min(Math.max(Math.ceil(retryAfter * 1000), 1000), 60000);
 
     console.log(`Discord 429. Tentativa ${tentativa}/3. Aguardando ${espera}ms...`);
     await wait(espera);
