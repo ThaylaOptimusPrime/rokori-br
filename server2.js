@@ -13,13 +13,6 @@ if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, '[]');
 
 app.use(express.json({ limit: '100kb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use((req, res, next) => {
-  if (req.path === '/admin.html') {
-    return res.status(404).send('Página não encontrada.');
-  }
-  next();
-});
-
 app.use(express.static(__dirname));
 
 function readApplications() {
@@ -42,6 +35,19 @@ function auth(req, res, next) {
   next();
 }
 
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Impede duas aprovações de cargo de acontecerem ao mesmo tempo.
+let discordRoleQueue = Promise.resolve();
+
+function queueDiscordRole(task) {
+  const run = discordRoleQueue.then(task, task);
+  discordRoleQueue = run.catch(() => {});
+  return run;
+}
+
 async function giveDiscordRole(discordId) {
   const token = process.env.DISCORD_BOT_TOKEN;
   const guildId = process.env.DISCORD_GUILD_ID;
@@ -51,24 +57,112 @@ async function giveDiscordRole(discordId) {
     throw new Error('Configuração do bot incompleta no Render.');
   }
 
-  const response = await fetch(
-    `https://discord.com/api/v10/guilds/${guildId}/members/${discordId}/roles/${roleId}`,
-    {
+  const url =
+    `https://discord.com/api/v10/guilds/${guildId}/members/${discordId}/roles/${roleId}`;
+
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const response = await fetch(url, {
       method: 'PUT',
       headers: {
         Authorization: `Bot ${token}`,
         'Content-Type': 'application/json'
       }
+    });
+
+    if (response.ok) {
+      return;
+    }
+
+    const details = await response.text();
+
+    if (response.status === 429 && attempt < 3) {
+      let retryMs = 5000;
+
+      try {
+        const data = JSON.parse(details);
+        if (typeof data.retry_after === 'number') {
+          retryMs = Math.ceil(data.retry_after * 1000);
+        }
+      } catch {}
+
+      const retryHeader = response.headers.get('retry-after');
+      if (retryHeader) {
+        const headerMs = Math.ceil(Number(retryHeader) * 1000);
+        if (Number.isFinite(headerMs)) {
+          retryMs = headerMs;
+        }
+      }
+
+      retryMs = Math.min(Math.max(retryMs, 1000), 60000);
+
+      console.log(
+        `Discord respondeu 429. Tentativa ${attempt}/3. Aguardando ${retryMs}ms...`
+      );
+
+      await wait(retryMs);
+      continue;
+    }
+
+    throw new Error(
+      `Discord recusou a entrega do cargo (HTTP ${response.status}). ${details.slice(0, 300)}`
+    );
+  }
+}
+
+
+async function sendDiscordApplication(application) {
+  const token = process.env.DISCORD_BOT_TOKEN;
+  const channelId = process.env.CANDIDATURAS_CHANNEL_ID;
+
+  if (!token || !channelId) {
+    throw new Error('DISCORD_BOT_TOKEN ou CANDIDATURAS_CHANNEL_ID não configurado.');
+  }
+
+  const fields = [
+    { name: '👤 Nick', value: application.nick || '-', inline: true },
+    { name: '💬 Discord', value: application.discord || '-', inline: true },
+    { name: '🆔 Discord ID', value: application.discordId || '-', inline: true },
+    { name: '🎂 Idade', value: application.age || '-', inline: true },
+    { name: '⏱️ Tempo disponível', value: application.time || '-', inline: true },
+    { name: '📚 Experiência', value: application.experience || '-', inline: false },
+    { name: '❓ Por que quer entrar?', value: application.why || '-', inline: false },
+    { name: '⚔️ Conflitos', value: application.conflict || '-', inline: false },
+    { name: '👥 Indicação/amigo', value: application.friend || '-', inline: false },
+    { name: '🎯 Escolha', value: application.choose || '-', inline: false },
+    { name: '📅 Disponibilidade', value: application.availability || '-', inline: false },
+    { name: '📜 Regras', value: application.rules || '-', inline: false }
+  ];
+
+  const response = await fetch(
+    `https://discord.com/api/v10/channels/${channelId}/messages`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bot ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        embeds: [{
+          title: '📩 Nova candidatura — Site',
+          description: `**ID da candidatura:** \`${application.id}\``,
+          color: 0x39ff14,
+          fields,
+          footer: { text: 'Rokori BR • Candidatura pelo site' },
+          timestamp: application.submittedAt
+        }]
+      })
     }
   );
 
   if (!response.ok) {
     const details = await response.text();
-    throw new Error(`Discord recusou a entrega do cargo (HTTP ${response.status}). ${details.slice(0, 300)}`);
+    throw new Error(
+      `Discord recusou a candidatura (HTTP ${response.status}). ${details.slice(0, 300)}`
+    );
   }
 }
 
-app.post('/api/applications', (req, res) => {
+app.post('/api/applications', async (req, res) => {
   const required = [
     'nick', 'discord', 'discordId', 'age', 'time', 'experience',
     'why', 'conflict', 'friend', 'choose', 'availability', 'rules'
@@ -94,7 +188,52 @@ app.post('/api/applications', (req, res) => {
   const applications = readApplications();
   applications.unshift(application);
   saveApplications(applications);
+
+  try {
+    await sendDiscordApplication(application);
+    console.log(`Candidatura ${application.id} enviada ao Discord.`);
+  } catch (error) {
+    console.error('Erro ao enviar candidatura ao Discord:', error.message);
+    return res.status(502).json({
+      error: 'A candidatura foi salva, mas não foi possível enviá-la ao Discord.',
+      details: error.message
+    });
+  }
+
   res.status(201).json({ ok: true, id: application.id });
+});
+
+// Recebe candidaturas do Discord e salva no mesmo applications.json do painel.
+app.post('/api/applications/from-discord', (req, res) => {
+  const required = [
+    'nick', 'discord', 'discordId', 'age', 'time', 'experience',
+    'why', 'conflict', 'friend', 'choose', 'availability', 'rules'
+  ];
+
+  const missing = required.filter(k => !String(req.body[k] ?? '').trim());
+  if (missing.length) {
+    return res.status(400).json({ error: 'Preencha todos os campos.', missing });
+  }
+
+  const discordId = String(req.body.discordId).trim();
+  if (!/^[0-9]{17,20}$/.test(discordId)) {
+    return res.status(400).json({ error: 'O ID do Discord precisa ter de 17 a 20 números.' });
+  }
+
+  const application = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+    ...Object.fromEntries(required.map(k => [k, String(req.body[k]).trim()])),
+    status: 'Pendente',
+    submittedAt: new Date().toISOString(),
+    source: 'Discord'
+  };
+
+  const applications = readApplications();
+  applications.unshift(application);
+  saveApplications(applications);
+
+  console.log(`Candidatura ${application.id} recebida do Discord e salva no painel.`);
+  return res.status(201).json({ ok: true, id: application.id });
 });
 
 app.get('/api/applications', auth, (req, res) => {
@@ -121,7 +260,7 @@ app.patch('/api/applications/:id', auth, async (req, res) => {
     }
 
     try {
-      await giveDiscordRole(String(item.discordId));
+      await queueDiscordRole(() => giveDiscordRole(String(item.discordId)));
     } catch (error) {
       console.error('Erro ao entregar cargo do Discord:', error.message);
       return res.status(502).json({ error: error.message || 'Não foi possível entregar o cargo no Discord.' });
@@ -145,7 +284,7 @@ app.delete('/api/applications/:id', auth, (req, res) => {
   res.json({ ok: true });
 });
 
-app.get('/painel', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Rokori BR rodando na porta ${PORT}`);
